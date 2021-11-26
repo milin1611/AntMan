@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:antman/utility/my_constant.dart';
 import 'package:antman/widgets/show_image.dart';
 import 'package:antman/widgets/show_title.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CreateAccount extends StatefulWidget {
   @override
@@ -10,6 +13,7 @@ class CreateAccount extends StatefulWidget {
 
 class _CreateAccountState extends State<CreateAccount> {
   String? typeUser;
+  File? file;
 
   Row buildName(double size) {
     return Row(
@@ -192,37 +196,56 @@ class _CreateAccountState extends State<CreateAccount> {
             buildPassword(size),
             buildTitle('รูปภาพ'),
             buildSubTitle(),
-            Row(
-              //ทำให้ icon ถ่ายภาพอยู่ข้างล่าง
-              //crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.add_a_photo,
-                    size: 36,
-                    color: MyConstant.dark,
-                  ),
-                ),
-                Container(
-                  margin: EdgeInsets.symmetric(vertical: 16),
-                  width: size * 0.6,
-                  child: ShowImage(path: MyConstant.avatar),
-                ),
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.add_photo_alternate,
-                    size: 36,
-                    color: MyConstant.dark,
-                  ),
-                ),
-              ],
-            )
+            buildAvatar(size)
           ],
         ),
       ),
+    );
+  }
+
+  Future<Null> chooseImage(ImageSource source) async {
+    try {
+      var result = await ImagePicker().getImage(
+        source: source,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+      setState(() {
+        file =File(result!.path);
+      });
+    } catch (e) {}
+  }
+
+  Row buildAvatar(double size) {
+    return Row(
+      //ทำให้ icon ถ่ายภาพอยู่ข้างล่าง
+      //crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        IconButton(
+          onPressed: () => chooseImage(ImageSource.camera),
+          icon: Icon(
+            Icons.add_a_photo,
+            size: 36,
+            color: MyConstant.dark,
+          ),
+        ),
+        Container(
+          margin: EdgeInsets.symmetric(vertical: 16),
+          width: size * 0.6,
+          child: file == null
+              ? ShowImage(path: MyConstant.avatar)
+              : Image.file(file!),
+        ),
+        IconButton(
+          onPressed: () => chooseImage(ImageSource.gallery),
+          icon: Icon(
+            Icons.add_photo_alternate,
+            size: 36,
+            color: MyConstant.dark,
+          ),
+        ),
+      ],
     );
   }
 
