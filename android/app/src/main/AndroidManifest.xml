@@ -5,6 +5,8 @@
    <application
         android:label="antman"
         android:icon="@mipmap/ic_launcher">
+        <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyAV31iDGQpu2taPQBg3cQcDf4qeQZpUyqI"/>
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"

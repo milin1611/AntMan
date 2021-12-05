@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:antman/utility/my_constant.dart';
 import 'package:antman/utility/my_dialog.dart';
 import 'package:antman/widgets/show_image.dart';
+import 'package:antman/widgets/show_progress.dart';
 import 'package:antman/widgets/show_title.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
@@ -16,23 +17,65 @@ class CreateAccount extends StatefulWidget {
 class _CreateAccountState extends State<CreateAccount> {
   String? typeUser;
   File? file;
+  double? lat, lng;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    findLatLng();
+    checkPermission();
   }
 
-  Future<Null> findLatLng()async{
+  Future<Null> checkPermission() async {
     bool locationService;
     LocationPermission locationPermission;
 
     locationService = await Geolocator.isLocationServiceEnabled();
     if (locationService) {
       print('Service Location Open');
+
+      locationPermission = await Geolocator.checkPermission();
+      if (locationPermission == LocationPermission.denied) {
+        locationPermission = await Geolocator.requestPermission();
+        if (locationPermission == LocationPermission.deniedForever) {
+          MyDialog().alertLocationService(
+              context, 'ไม่อนุญาติแชร์ Location', 'โปรดแชร์ Location');
+        } else {
+          // Find LatLng
+          findLatLng();
+        }
+      } else {
+        if (locationPermission == LocationPermission.deniedForever) {
+          MyDialog().alertLocationService(
+              context, 'ไม่อนุญาติแชร์ Location', 'โปรดแชร์ Location');
+        } else {
+          //Find LatLng
+          findLatLng();
+        }
+      }
     } else {
       print('Service Location Close');
-      MyDialog().alertLocationService(context);
+      MyDialog().alertLocationService(context, 'Location Service ปิดอยู่ ?',
+          'กรุณาเปิด Location Service ด้วยค่ะ');
+    }
+  }
+
+  Future<Null> findLatLng() async {
+    print('findLatLng ==> Work');
+    Position? position = await findPosition();
+    setState(() {
+      lat = position!.latitude;
+      lng = position.longitude;
+      print('lat = $lat, lng = $lng');
+    });
+  }
+
+  Future<Position?> findPosition() async {
+    Position position;
+    try {
+      position = await Geolocator.getCurrentPosition();
+      return position;
+    } catch (e) {
+      return null;
     }
   }
 
@@ -217,12 +260,20 @@ class _CreateAccountState extends State<CreateAccount> {
             buildPassword(size),
             buildTitle('รูปภาพ'),
             buildSubTitle(),
-            buildAvatar(size)
+            buildAvatar(size),
+            buildTitle('แสดงพิกัดที่คุรอยู่'),
+            buildMap(),
           ],
         ),
       ),
     );
   }
+
+  Widget buildMap() => Container(
+        width: double.infinity,
+        height: 200,
+        child: lat == null ? ShowProgress() : Text('Lat = $lat, Lng = $lng'),
+      );
 
   Future<Null> chooseImage(ImageSource source) async {
     try {
@@ -232,7 +283,7 @@ class _CreateAccountState extends State<CreateAccount> {
         maxHeight: 800,
       );
       setState(() {
-        file =File(result!.path);
+        file = File(result!.path);
       });
     } catch (e) {}
   }
