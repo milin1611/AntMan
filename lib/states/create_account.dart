@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:antman/utility/my_constant.dart';
+import 'package:antman/utility/my_dialog.dart';
 import 'package:antman/widgets/show_image.dart';
 import 'package:antman/widgets/show_title.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CreateAccount extends StatefulWidget {
@@ -14,6 +16,25 @@ class CreateAccount extends StatefulWidget {
 class _CreateAccountState extends State<CreateAccount> {
   String? typeUser;
   File? file;
+
+  @override
+  void initState(){
+    super.initState();
+    findLatLng();
+  }
+
+  Future<Null> findLatLng()async{
+    bool locationService;
+    LocationPermission locationPermission;
+
+    locationService = await Geolocator.isLocationServiceEnabled();
+    if (locationService) {
+      print('Service Location Open');
+    } else {
+      print('Service Location Close');
+      MyDialog().alertLocationService(context);
+    }
+  }
 
   Row buildName(double size) {
     return Row(
