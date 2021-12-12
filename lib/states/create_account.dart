@@ -7,6 +7,7 @@ import 'package:antman/widgets/show_progress.dart';
 import 'package:antman/widgets/show_title.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CreateAccount extends StatefulWidget {
@@ -18,6 +19,7 @@ class _CreateAccountState extends State<CreateAccount> {
   String? typeUser;
   File? file;
   double? lat, lng;
+  final formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
@@ -87,6 +89,11 @@ class _CreateAccountState extends State<CreateAccount> {
           margin: EdgeInsets.only(top: 16),
           width: size * 0.6,
           child: TextFormField(
+            validator: (value) {
+              if (value!.isEmpty) {
+                return 'กรุณากรอก Name ด้วยค่ะ';
+              } else {}
+            },
             decoration: InputDecoration(
               labelStyle: MyConstant().h3Style(),
               labelText: 'Name :',
@@ -117,6 +124,12 @@ class _CreateAccountState extends State<CreateAccount> {
           margin: EdgeInsets.only(top: 16),
           width: size * 0.6,
           child: TextFormField(
+            keyboardType: TextInputType.phone,
+            validator: (value) {
+              if (value!.isEmpty) {
+                return 'กรุณากรอก Phone ด้วยค่ะ';
+              } else {}
+            },
             decoration: InputDecoration(
               labelStyle: MyConstant().h3Style(),
               labelText: 'Phone :',
@@ -147,6 +160,11 @@ class _CreateAccountState extends State<CreateAccount> {
           margin: EdgeInsets.only(top: 16),
           width: size * 0.6,
           child: TextFormField(
+            validator: (value) {
+              if (value!.isEmpty) {
+                return 'กรุณากรอก User ด้วยค่ะ';
+              } else {}
+            },
             decoration: InputDecoration(
               labelStyle: MyConstant().h3Style(),
               labelText: 'User :',
@@ -177,6 +195,11 @@ class _CreateAccountState extends State<CreateAccount> {
           margin: EdgeInsets.only(top: 16),
           width: size * 0.6,
           child: TextFormField(
+            validator: (value) {
+              if (value!.isEmpty) {
+                return 'กรุณากรอก Password ด้วยค่ะ';
+              } else {}
+            },
             decoration: InputDecoration(
               labelStyle: MyConstant().h3Style(),
               labelText: 'Password :',
@@ -207,6 +230,11 @@ class _CreateAccountState extends State<CreateAccount> {
           margin: EdgeInsets.only(top: 16),
           width: size * 0.6,
           child: TextFormField(
+            validator: (value) {
+              if (value!.isEmpty) {
+                return 'กรุณากรอก Address ด้วยค่ะ';
+              } else {}
+            },
             maxLines: 4,
             decoration: InputDecoration(
               hintText: 'Address :',
@@ -238,41 +266,79 @@ class _CreateAccountState extends State<CreateAccount> {
     double size = MediaQuery.of(context).size.width;
     return Scaffold(
       appBar: AppBar(
+        actions: [
+          buildCreateNewAccount(),
+        ],
         title: Text('Create Account'),
         backgroundColor: MyConstant.primary,
       ),
       body: GestureDetector(
         onTap: () => FocusScope.of(context).requestFocus(FocusNode()),
         behavior: HitTestBehavior.opaque,
-        child: ListView(
-          padding: EdgeInsets.all(16),
-          children: [
-            buildTitle('ข้อมูลทั่วไป :'),
-            buildName(size),
-            buildTitle('ชนิดของ User :'),
-            buildRadioBuyer(size),
-            buildRadioSeller(size),
-            buildRadioRider(size),
-            buildTitle('ข้อมูลพื้นฐาน'),
-            buildAddress(size),
-            buildPhone(size),
-            buildUser(size),
-            buildPassword(size),
-            buildTitle('รูปภาพ'),
-            buildSubTitle(),
-            buildAvatar(size),
-            buildTitle('แสดงพิกัดที่คุรอยู่'),
-            buildMap(),
-          ],
+        child: Form(
+          key: formKey,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                buildTitle('ข้อมูลทั่วไป :'),
+                buildName(size),
+                buildTitle('ชนิดของ User :'),
+                buildRadioBuyer(size),
+                buildRadioSeller(size),
+                buildRadioRider(size),
+                buildTitle('ข้อมูลพื้นฐาน'),
+                buildAddress(size),
+                buildPhone(size),
+                buildUser(size),
+                buildPassword(size),
+                buildTitle('รูปภาพ'),
+                buildSubTitle(),
+                buildAvatar(size),
+                buildTitle('แสดงพิกัดที่คุณอยู่'),
+                buildMap(),
+              ],
+            ),
+          ),
         ),
       ),
     );
   }
 
+  IconButton buildCreateNewAccount() {
+    return IconButton(
+      onPressed: () {
+        if (formKey.currentState!.validate()) {
+          if (typeUser == null) {
+            MyDialog().normalDialog(context, 'ยังไม่ได้เลือกชนิด User',
+                'กรุณา เลือกชนิด User ที่ต้องการ');
+          } else {}
+        }
+      },
+      icon: Icon(Icons.cloud_upload),
+    );
+  }
+
+  Set<Marker> setMarker() => <Marker>[
+        Marker(
+            markerId: MarkerId('id'),
+            position: LatLng(lat!, lng!),
+            infoWindow: InfoWindow(
+                title: 'คุณอยู่ที่นี่', snippet: 'lat = $lat, lng = $lng')),
+      ].toSet();
+
   Widget buildMap() => Container(
         width: double.infinity,
-        height: 200,
-        child: lat == null ? ShowProgress() : Text('Lat = $lat, Lng = $lng'),
+        height: 300,
+        child: lat == null
+            ? ShowProgress()
+            : GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: LatLng(lat!, lng!),
+                  zoom: 16,
+                ),
+                onMapCreated: (controller) {},
+                markers: setMarker(),
+              ),
       );
 
   Future<Null> chooseImage(ImageSource source) async {
